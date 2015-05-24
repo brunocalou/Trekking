@@ -1,8 +1,6 @@
 #ifndef ENCODERLIST_H
 #define ENCODERLIST_H
 
-//#include "Stream.h"
-#include "/usr/share/arduino/hardware/arduino/cores/arduino/Stream.h"
 #include <inttypes.h>
 #include <Arduino.h>
 
@@ -10,16 +8,14 @@
 	To get the linked list class, if not available, check https://github.com/ivanseidel/LinkedList
 */
 #ifndef LinkedList_h
-// #include "../LinkedList/LinkedList.h"
-#include "/usr/share/arduino/libraries/LinkedList/LinkedList.h"
+#include "../LinkedList/LinkedList.h"
 #endif
 
-//#include "../Encoder/simpeencoder.h"
-#include "/usr/share/arduino/libraries/Encoder/simpleencoder.h"
+#include "../Encoder/simpleencoder.h"
 
 #define ACKNOWLEDGEMENT 'a'
-#define TOKEN ','
-#define RESET 'r'
+#define TOKEN 			','
+#define RESET 			'r'
 
 class EncoderList: public LinkedList<SimpleEncoder*> {
 public:
