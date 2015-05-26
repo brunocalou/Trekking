@@ -4,16 +4,18 @@
 #include "../Log/log.h"
 #include "../XLMaxSonarEZ/sonarlist.h"
 #include "../Robot/robot.h"
+// #include "../Timer/timer.h"
 #include "trekkingmath.h"
 #include "position.h"
+#include "locator.h"
 
-enum OperationMode {
+// enum OperationMode {
 
-	STANDBY,
-	SEARCH_STAGE,
-	REFINED_SEARCH_STAGE,
-	LIGHTING
-};
+// 	STANDBY,
+// 	SEARCH_STAGE,
+// 	REFINED_SEARCH_STAGE,
+// 	LIGHTING
+// };
 
 class Trekking {
 private:
@@ -21,12 +23,8 @@ private:
 	float linear_velocity;
 	float angular_velocidy;
 
-	// Position* targets;
 	LinkedList<Position *> targets;
-
-	// Position* current_target;
-
-	OperationMode operation_mode;
+	int current_target_index;
 
 	const int COMMAND_BAUD_RATE;
 	const int LOG_BAUD_RATE;
@@ -48,6 +46,10 @@ private:
 
 	bool is_aligned;
 
+	char current_command;
+
+	bool sirene_is_on;
+
 	Robot robot;
 	
 	//Sonars
@@ -58,9 +60,6 @@ private:
 
 	Log log;
 	// Kalman kalman;
-	
-	// Timer timer;
-	// Locator locator;
 	// Radio radio;
 
 	//Holds witch is the serial stream to receive
@@ -68,17 +67,37 @@ private:
 	Stream *command_stream;
 	Stream *log_stream;
 	Stream *encoder_stream;
-	
+
+	Locator locator;
+
+	//Timers
+	TimerForMethods<Locator> encoders_timer;
+	TimerForMethods<Trekking> sirene_timer;
 
 	void reset();
 	void stop();
 	void readInputs();
-	void synalyze(bool light_enabled);
-	void search();
-	void refinedSearch();
+	void turnOnSirene();
+	void turnOffSirene();
+
+	void startTimers();
+	void stopTimers();
+	void resetTimers();
+	void updateTimers();
 
 	//Returns 1 if all the sensors are working
 	bool checkSensors();
+
+	/*----Operation modes----*/
+	void standby();
+	void search();
+	void refinedSearch();
+	void lighting();
+	void (Trekking::*operation_mode)(void);
+
+	void goToNextTarget();
+
+	void debug();
 
 public:
 	Trekking();
@@ -86,11 +105,9 @@ public:
 
 	void addTarget(Position *target);
 
-	// void setSonarList(SonarList sonars);
-
-	//void setRobot(Robot *robot);
-
 	void update();
+
+	void start();
 };
 
 #endif //TREKKING_H

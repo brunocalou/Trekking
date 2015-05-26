@@ -72,6 +72,7 @@ void EncoderList::reset() {
 	for(int i = 0; i < _size; i++) {
 		this->get(i)->reset();
 	}
+	serial->println(RESET);
 }
 
 void EncoderList::start() {
