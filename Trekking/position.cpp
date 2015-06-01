@@ -1,38 +1,50 @@
 #include "position.h"
+#include "Arduino.h"
 
 //construtores
 Position::Position(){
 	Position:Position(0,0,0);
 }
 
-Position::Position(int x, int y, int theta){
+Position::Position(float x, float y, float theta){
 	this->x = x;
 	this->y = y;
 	this->theta = theta;
 }
 	
 //getters
-int Position::getX(){
+float Position::getX(){
 	return x;
 }
 
-int Position::getY(){
+float Position::getY(){
 	return y;
 }
 
-int Position::getTheta(){
+float Position::getTheta(){
 	return theta;
 }
 
 //setters
-void Position::setX(int x){
+void Position::set(float x, float y, float theta){
+	this->x = x;
+	this->y = y;
+	this->theta = theta;	
+}
+
+
+void Position::setX(float x){
 	this->x = x;
 }
 
-void Position::setY(int y){
+void Position::setY(float y){
 	this->y = y;
 }
 
-void Position::setTheta(int theta){
+void Position::setTheta(float theta){
 	this->theta = theta;
+}
+
+float Position::distanceFrom(Position *position) {
+	return sqrt( sq((x - position->getX())) + sq(y - position->getY()) );
 }

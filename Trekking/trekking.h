@@ -24,6 +24,7 @@ private:
 	float angular_velocidy;
 
 	LinkedList<Position *> targets;
+	Position trekking_position;
 	int current_target_index;
 
 	const int COMMAND_BAUD_RATE;
@@ -32,6 +33,7 @@ private:
 
 	const byte MAX_MOTOR_PWM;
 	const int LIGHT_DURATION;
+	const float PROXIMITY_RADIUS;
 
 	/*
 		Input states
@@ -49,6 +51,9 @@ private:
 	char current_command;
 
 	bool sirene_is_on;
+	bool is_tracking;
+
+	float distance_to_target;
 
 	Robot robot;
 	
@@ -73,6 +78,7 @@ private:
 	//Timers
 	TimerForMethods<Locator> encoders_timer;
 	TimerForMethods<Trekking> sirene_timer;
+	TimerForMethods<Trekking> tracking_regulation_timer;
 
 	void reset();
 	void stop();
@@ -87,6 +93,10 @@ private:
 
 	//Returns 1 if all the sensors are working
 	bool checkSensors();
+
+	//auxiliar
+	void planTrajectory(float vlinear, float vangular, Position destination);
+	void trackTrajectory();
 
 	/*----Operation modes----*/
 	void standby();

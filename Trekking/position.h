@@ -3,24 +3,27 @@
 
 class Position{
 private:
-	int x;
-	int y;
-	int theta;
+	float x;
+	float y;
+	float theta;
 
 public:
 	//construtores
 	Position();
-	Position(int x, int y, int theta);
+	Position(float x, float y, float theta);
 
 	//getters
-	int getX();
-	int getY();
-	int getTheta();
+	float getX();
+	float getY();
+	float getTheta();
 
 	//setters
-	void setX(int x);
-	void setY(int y);
-	void setTheta(int theta);	
+	void set(float x, float y, float theta);
+	void setX(float x);
+	void setY(float y);
+	void setTheta(float theta);
+
+	float distanceFrom(Position *position);
 };
 
 #endif

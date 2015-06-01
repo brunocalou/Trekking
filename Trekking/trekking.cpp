@@ -12,6 +12,7 @@ Trekking::Trekking():
 	ENCODER_BAUD_RATE(57600),
 
 	LIGHT_DURATION(3000),
+	PROXIMITY_RADIUS(3.0),
 
 	right_sonar(RIGHT_SONAR_TX_PIN, RIGHT_SONAR_RX_PIN),
 	left_sonar(LEFT_SONAR_TX_PIN, LEFT_SONAR_RX_PIN),
@@ -21,11 +22,13 @@ Trekking::Trekking():
 
 	targets(),
 	encoder_stream(&Serial2),
-	locator(encoder_stream),
+	trekking_position(0, 0, 0),
+	locator(encoder_stream, trekking_position),
 
 	//Timers
 	encoders_timer(&locator, &Locator::update),
-	sirene_timer(this, &Trekking::goToNextTarget)
+	sirene_timer(this, &Trekking::goToNextTarget),
+	tracking_regulation_timer(this, &Trekking::trackTrajectory)
 {
 	//Streams
 	command_stream = &Serial; //bluetooth on Serial1
@@ -43,7 +46,7 @@ Trekking::Trekking():
 	//Timers
 	encoders_timer.setInterval(30);
 	sirene_timer.setTimeout(LIGHT_DURATION);
-
+	tracking_regulation_timer.setTimeout(30);
 	reset();
 }
 
@@ -108,14 +111,16 @@ void Trekking::reset() {
 	min_distance_to_refine_search = 0;
 	current_command = ' ';
 	is_aligned = false;
+	is_tracking = false;
 	current_target_index = 0;
+	distance_to_target = trekking_position.distanceFrom(targets.get(current_target_index));
 	
 	//Go to the standby state
 	operation_mode = &Trekking::standby;
 	log.assert("operation mode", "standby");
 
 	//Trekking objects
-	locator.reset();
+//	locator.reset();
 	robot.setPWM(MAX_MOTOR_PWM, MAX_MOTOR_PWM);
 	robot.stop();
 	// Kalman kalman;
@@ -136,6 +141,7 @@ void Trekking::stop() {
 	robot.stop();
 }
 
+//TODO: acho que nao vai rolar fazer essa...
 void Trekking::readInputs() {
 	init_button = true;
 	emergency_button = false;
@@ -155,6 +161,7 @@ void Trekking::turnOffSirene() {
 	sirene_is_on = false;
 }
 
+//TODO: vai ser necessario mesmo?
 bool Trekking::checkSensors() {
 	return true;
 }
@@ -179,9 +186,31 @@ void Trekking::standby() {
 	}
 }
 
-void Trekking::search() {
+void Trekking::trackTrajectory() {
+	distance_to_target = trekking_position.distanceFrom(targets.get(current_target_index));
 
 }
+
+//TODO: AHAHA
+//void Trekking::planTrajectory(){
+//
+//}
+
+//TODO: funcao de busca
+void Trekking::search() {
+	if(!is_tracking) {
+		tracking_regulation_timer.start();
+		is_tracking = true;
+	}
+	//Colocar a condicao de proximidade
+	if(distance_to_target < PROXIMITY_RADIUS) {
+		tracking_regulation_timer.stop();
+		tracking_regulation_timer.reset();
+		operation_mode = &Trekking::refinedSearch;
+	}
+}
+
+
 
 void Trekking::refinedSearch() {
 
@@ -204,6 +233,7 @@ void Trekking::goToNextTarget() {
 	} else {
 		operation_mode = &Trekking::search;
 		log.assert("operation mode", "search stage");
+		//AQUIIIIIII
 	}
 }
 
@@ -215,16 +245,19 @@ void Trekking::startTimers() {
 void Trekking::stopTimers() {
 	encoders_timer.stop();
 	sirene_timer.stop();
+	tracking_regulation_timer.stop();
 }
 
 void Trekking::resetTimers() {
 	encoders_timer.reset();
 	sirene_timer.reset();
+	tracking_regulation_timer.reset();
 }
 
 void Trekking::updateTimers() {
 	encoders_timer.update();
 	sirene_timer.update();
+	tracking_regulation_timer.update();
 }
 
 void Trekking::start() {

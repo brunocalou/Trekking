@@ -3,6 +3,7 @@
 #include "sonarlist.h"
 #include "encoderlist.h"
 #include "timer.h"
+#include "position.h"
 // #include "XLMaxSonarEZ.h"
 #include "log.h"
 
