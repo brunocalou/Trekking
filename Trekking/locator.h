@@ -23,24 +23,23 @@ public:
 	~Locator();
 	void start();
 	void update();
-	Position getLastPosition();
+	Position* getLastPosition();
 	void reset(Position new_position);
-
-private:
+	EncoderList encoder_list;
+public:
 	SimpleEncoder front_left_encoder;
 	SimpleEncoder front_right_encoder;
 	SimpleEncoder back_left_encoder;
 	SimpleEncoder back_right_encoder;
 
-
-	EncoderList encoder_list;
+	
 	unsigned long last_update_time;
-	float robot_linar_speed;
+	float robot_linear_speed;
 	float robot_angular_speed;
 	// Stream *encoder_stream;
 
 
-	float last_robot_linar_speed;
+	float last_robot_linear_speed;
 	float last_robot_angular_speed;
 	Position last_position;
 

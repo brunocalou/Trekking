@@ -87,7 +87,7 @@ void Trekking::update() {
 
 	//Stop the robot if the emergency button is pressed or
 	//the stop command was received
-	if(current_command == 'S' || emergency_button) {
+	if(current_command == 'D' || emergency_button) {
 		stop();
 		operation_mode = &Trekking::standby;
 		log.assert("operation mode", "standby");
@@ -113,14 +113,15 @@ void Trekking::reset() {
 	is_aligned = false;
 	is_tracking = false;
 	current_target_index = 0;
-	distance_to_target = trekking_position.distanceFrom(targets.get(current_target_index));
+	distance_to_target = locator.getLastPosition()->distanceFrom(targets.get(current_target_index));
 	
 	//Go to the standby state
 	operation_mode = &Trekking::standby;
 	log.assert("operation mode", "standby");
 
 	//Trekking objects
-//	locator.reset();
+	Position initial_position(0,0,0);
+	locator.reset(initial_position);
 	robot.setPWM(MAX_MOTOR_PWM, MAX_MOTOR_PWM);
 	robot.stop();
 	// Kalman kalman;
@@ -175,6 +176,7 @@ void Trekking::standby() {
 			if(checkSensors()) {
 				operation_mode = &Trekking::search;
 				startTimers();
+				locator.start();
 				log.assert("operation mode", "search stage");
 			} else {
 				log.error("sensors", "sensors not working as expected");
@@ -187,7 +189,7 @@ void Trekking::standby() {
 }
 
 void Trekking::trackTrajectory() {
-	distance_to_target = trekking_position.distanceFrom(targets.get(current_target_index));
+	distance_to_target = locator.getLastPosition()->distanceFrom(targets.get(current_target_index));
 
 }
 
@@ -272,8 +274,10 @@ void Trekking::debug() {
 		operation_mode = &Trekking::standby;
 	} else if(current_command == 'e') {
 		log.debug("debug command", "set to search");
-		operation_mode = &Trekking::search;
-
+		// operation_mode = &Trekking::search;
+		operation_mode_switch = AUTO_MODE;
+		init_button = true;
+		standby();
 	} else if(current_command == 'f') {
 		log.debug("debug command", "set to refined search");
 		operation_mode = &Trekking::refinedSearch;
@@ -286,12 +290,20 @@ void Trekking::debug() {
 		log.debug("debug command", "reset");
 		reset();
 
-	} else if(current_command == '1') {
+	} else if(current_command == 'W') {
 		log.debug("debug command", "turn on sirene");
 		turnOnSirene();
 
-	} else if(current_command == '2') {
+	} else if(current_command == 'w') {
 		log.debug("debug command", "turn off sirene");
 		turnOffSirene();
+	} else if(current_command == 'n') {
+		log.debug("debug command", "print encoders");
+		for(int i = 0; i < locator.encoder_list.size(); i++) {
+			Serial.print(locator.encoder_list.get(i)->getPulses());
+			Serial.print("\t");
+		}
+		Serial.println();
+		
 	}
 }
