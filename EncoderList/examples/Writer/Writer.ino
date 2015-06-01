@@ -2,6 +2,7 @@
   Read the encoders and send it to the other arduino
 */
 #include "encoderlist.h"
+#include "simpleencoder.h"
 #include "SoftwareSerial.h"
 
 struct Encoder {
@@ -55,12 +56,12 @@ struct Encoder {
 };
 
 Encoder front_left_encoder(8,9);
-Encoder front_right_encoder(4,5);
-Encoder back_left_encoder(6,7);
+Encoder back_left_encoder(4,5);
+Encoder front_right_encoder(6,7);
 Encoder back_right_encoder(2,3);
 
 SoftwareSerial my_serial(10,11);
-Stream *current_stream = &my_serial;
+Stream *current_stream = &Serial;
 
 void read() {
   front_left_encoder.read();
@@ -80,14 +81,14 @@ void send() {
   String message = "";
   message += front_left_encoder.pulses;
   message += TOKEN;
-  message += front_right_encoder.pulses;
-  message += TOKEN;
   message += back_left_encoder.pulses;
+  message += TOKEN;
+  message += front_right_encoder.pulses;
   message += TOKEN;
   message += back_right_encoder.pulses;
 
   current_stream->println(message);
-  Serial.println(message);
+  // Serial.println(message);
 }
 
 void setup() {

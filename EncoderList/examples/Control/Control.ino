@@ -36,21 +36,21 @@ void setup() {
   encoder_list.addEncoder(&encoder4);
   encoder_list.start();
   time = millis();
-  Serial.print("data=[");
+  // Serial.print("data=[");
   time_counter = millis();
 }
 
 void loop() {
   
-  if(stop_loop) {
-    return ;
-  }
+  // if(stop_loop) {
+  //   return ;
+  // }
   
-  if(millis() - time_counter > max_time) {
-    Serial.println("];");
-    stop_loop = true;
-    return ;
-  }
+  // if(millis() - time_counter > max_time) {
+  //   Serial.println("];");
+  //   stop_loop = true;
+  //   return ;
+  // }
   
   if(Serial.available()) {
     if(Serial.read() == RESET) {
@@ -59,14 +59,14 @@ void loop() {
     }
   }
   if(encoder_list.read()) {
-//    Serial.print(encoder.getPulses());
-//    Serial.print("\t");
-//    Serial.print(encoder2.getPulses());
-//    Serial.print("\t");
-//    Serial.print(encoder3.getPulses());
-//    Serial.print("\t");
-//    Serial.println(encoder4.getPulses());
-//    Serial.println("");
+   Serial.print(encoder.getPulses());
+   Serial.print("\t");
+   Serial.print(encoder2.getPulses());
+   Serial.print("\t");
+   Serial.print(encoder3.getPulses());
+   Serial.print("\t");
+   Serial.println(encoder4.getPulses());
+   Serial.println("");
     
     delta_t = millis() - time;
     if(delta_t) {
@@ -77,7 +77,7 @@ void loop() {
 //      Serial.println("");
     }
     time = millis();
-    printData();
+    // printData();
 
   }
   delay(50);
