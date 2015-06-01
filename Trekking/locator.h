@@ -21,6 +21,19 @@ class Locator {
 public:
 	Locator(Stream *encoder_stream, Position initial_position);
 	~Locator();
+
+	//getters
+	const SimpleEncoder& getBackLeftEncoder() const;
+	const SimpleEncoder& getBackRightEncoder() const;
+	const EncoderList& getEncoderList() const;
+	const SimpleEncoder& getFrontLeftEncoder() const;
+	const SimpleEncoder& getFrontRightEncoder() const;
+	float getLastRobotAngularSpeed() const;
+	float getLastRobotLinearSpeed() const;
+	unsigned long getLastUpdateTime() const;
+	float getRobotAngularSpeed() const;
+	float getRobotLinearSpeed() const;
+
 	void start();
 	void update();
 	Position* getLastPosition();

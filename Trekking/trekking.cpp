@@ -14,6 +14,8 @@ Trekking::Trekking():
 	LIGHT_DURATION(3000),
 	PROXIMITY_RADIUS(3.0),
 
+	READ_ENCODERS_TIME(30),
+	
 	right_sonar(RIGHT_SONAR_TX_PIN, RIGHT_SONAR_RX_PIN),
 	left_sonar(LEFT_SONAR_TX_PIN, LEFT_SONAR_RX_PIN),
 	center_sonar(CENTER_SONAR_TX_PIN, CENTER_SONAR_RX_PIN),
@@ -21,9 +23,9 @@ Trekking::Trekking():
 	sonar_list(Sonar::CHAIN),
 
 	targets(),
+	planned_trajectory(),
 	encoder_stream(&Serial2),
-	trekking_position(0, 0, 0),
-	locator(encoder_stream, trekking_position),
+	locator(encoder_stream, Position(0,0,0)),
 
 	//Timers
 	encoders_timer(&locator, &Locator::update),
@@ -44,9 +46,9 @@ Trekking::Trekking():
 	sonar_list.addSonar(&right_sonar);
 
 	//Timers
-	encoders_timer.setInterval(30);
+	encoders_timer.setInterval(READ_ENCODERS_TIME);
 	sirene_timer.setTimeout(LIGHT_DURATION);
-	tracking_regulation_timer.setTimeout(30);
+	tracking_regulation_timer.setTimeout(READ_ENCODERS_TIME);
 	reset();
 }
 
@@ -189,14 +191,54 @@ void Trekking::standby() {
 }
 
 void Trekking::trackTrajectory() {
-	distance_to_target = locator.getLastPosition()->distanceFrom(targets.get(current_target_index));
-
+	Position* trekking_position = locator.getLastPosition();
+	distance_to_target = trekking_position->distanceFrom(targets.get(current_target_index));
+	tracking_regulation_timer.getElapsedTime();
 }
 
-//TODO: AHAHA
-//void Trekking::planTrajectory(){
-//
-//}
+void Trekking::planTrajectory(bool is_trajectory_linear, float velocity, Position* destination){
+	planned_trajectory.clear();
+	Position* trekking_position = locator.getLastPosition();
+	if(is_trajectory_linear){
+		float path = trekking_position->distanceFrom(destination);
+		float time = path/velocity;
+		float delta_t = (float) READ_ENCODERS_TIME;
+		delta_t /= 1000; //Mills to sec
+		planned_trajectory.add(*trekking_position);
+		float dirx = 1;
+		if (trekking_position->getX() > destination->getY()){
+			dirx = -1;
+		}
+		float diry = 1;
+		if (trekking_position->getY() > destination->getY()){
+			diry = -1;
+		}
+		float theta = trekking_position->getTheta();
+		for(float t = delta_t; t<time; t += delta_t){
+			float path_t = 	velocity*t;
+			Position position_t = Position(
+					trekking_position->getX() + path_t*cos(theta)*dirx, //x
+					trekking_position->getY() + path_t*sin(theta)*diry, //y
+					theta);
+			planned_trajectory.add(position_t);
+		}
+	}
+	else{
+		//TODO:
+		float path = destination->getTheta() - trekking_position->getTheta();
+		float time = path/velocity;
+		float delta_t = (float) READ_ENCODERS_TIME;
+		delta_t /= 1000;
+		float x = trekking_position->getX();
+		float y = trekking_position->getY();
+		planned_trajectory.add(*trekking_position);
+		for(float t = delta_t; t<time; t+= delta_t){
+			Position position_t = Position(x,y,
+					trekking_position->getTheta() +  velocity*t);
+			planned_trajectory.add(position_t);
+		}
+	}
+}
 
 //TODO: funcao de busca
 void Trekking::search() {

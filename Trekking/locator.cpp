@@ -21,6 +21,39 @@ void Locator::start() {
 	encoder_list.start();
 }
 
+//getters
+const SimpleEncoder& Locator::getBackLeftEncoder() const {
+	return back_left_encoder;
+}
+const SimpleEncoder& Locator::getBackRightEncoder() const {
+	return back_right_encoder;
+}
+const EncoderList& Locator::getEncoderList() const {
+	return encoder_list;
+}
+const SimpleEncoder& Locator::getFrontLeftEncoder() const {
+	return front_left_encoder;
+}
+const SimpleEncoder& Locator::getFrontRightEncoder() const {
+	return front_right_encoder;
+}
+float Locator::getLastRobotAngularSpeed() const {
+	return last_robot_angular_speed;
+}
+float Locator::getLastRobotLinearSpeed() const {
+	return last_robot_linear_speed;
+}
+unsigned long Locator::getLastUpdateTime() const {
+	return last_update_time;
+}
+float Locator::getRobotAngularSpeed() const {
+	return robot_angular_speed;
+}
+float Locator::getRobotLinearSpeed() const {
+	return robot_linear_speed;
+}
+
+
 
 void Locator::update() {
 	//Get the current values
@@ -39,7 +72,7 @@ void Locator::update() {
 	calculateSpeeds(rps);
 	calcutePosition(delta_t); //Update position and velocity
 	
-	//Updat values
+	//Update values
 	last_update_time = now;
 }
 
