@@ -304,6 +304,8 @@ void Trekking::debug() {
 			Serial.print("\t");
 		}
 		Serial.println();
-		
+	} else if(current_command == 'L') {
+		log.debug("debug command", "print locator");
+		// log << DEBUG << 
 	}
 }

@@ -26,6 +26,7 @@ public:
 	Position* getLastPosition();
 	void reset(Position new_position);
 	EncoderList encoder_list;
+
 public:
 	SimpleEncoder front_left_encoder;
 	SimpleEncoder front_right_encoder;
