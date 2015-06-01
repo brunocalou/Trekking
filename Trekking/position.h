@@ -24,6 +24,7 @@ public:
 	void setTheta(float theta);
 
 	float distanceFrom(Position *position);
+	Position calculateGap(Position pos);
 };
 
 #endif
