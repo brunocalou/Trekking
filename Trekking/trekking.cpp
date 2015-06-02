@@ -346,8 +346,12 @@ void Trekking::debug() {
 			Serial.print("\t");
 		}
 		Serial.println();
-	} else if(current_command == 'L') {
-		log.debug("debug command", "print locator");
-		// log << DEBUG << 
+	} if(1){//current_command == 'L') {
+		// log.debug("debug command", "print locator");
+		// log << DEBUG << "" << log_endl;
+		
+		// log << locator.getRobotAngularSpeed() << '\t';
+		// log << locator.getRobotLinearSpeed() << '\t';
+		// log << locator.getLastUpdateTime() << '\t';
 	}
 }
