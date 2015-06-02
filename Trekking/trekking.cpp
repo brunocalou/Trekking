@@ -294,7 +294,8 @@ void Trekking::search() {
 }
 
 void Trekking::refinedSearch() {
-
+	sonar_list.read();
+	// center_sonar.getDistance();
 }
 
 void Trekking::lighting() {
@@ -388,18 +389,32 @@ void Trekking::debug() {
 		}
 		Serial.println();
 	} else if(current_command == 'L') {
-		// log.debug("debug command", "print locator");
-		log << DEBUG << "" << log_endl;
+		log.debug("debug command", "print locator");
+		log << DEBUG << "angular\tlinear\ttime" << log_endl;
 		
 		log << locator.getRobotAngularSpeed() << '\t';
 		log << locator.getRobotLinearSpeed() << '\t';
-		log << locator.getLastUpdateTime() << '\t';
-	} if(current_command == 'm') {
-		// log.debug("debug command", "print mpu");
-		log << DEBUG << "" << log_endl;
+		log << locator.getLastUpdateTime() << log_endl;
+	} else if(current_command == 'm') {
+		log.debug("debug command", "print mpu");
+		log << DEBUG << "x\ty\tz" << log_endl;
 		
 		log << locator.euler_degrees[0] << '\t';
 		log << locator.euler_degrees[1] << '\t';
-		log << locator.euler_degrees[2] << '\t';
+		log << locator.euler_degrees[2] << log_endl;
+	} else if(current_command == 'o') {
+		log.debug("debug command", "print sonars");
+		log << DEBUG << "left\tcenter\tright" << log_endl;
+		sonar_list.read();
+		log << left_sonar.getDistance() << '\t';
+		log << center_sonar.getDistance() << '\t';
+		log << right_sonar.getDistance() << log_endl;
+	} else if(current_command == 'b') {
+		log.debug("debug command", "print buttons");
+		log << DEBUG << "init\temergency\tmode" << log_endl;
+		
+		log << digitalRead(INIT_BUTTON_PIN) << '\t';
+		log << digitalRead(EMERGENCY_BUTTON_PIN) << '\t';
+		log << digitalRead(OPERATION_MODE_SWITCH_PIN) << log_endl;
 	}
 }
