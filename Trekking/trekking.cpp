@@ -1,10 +1,14 @@
 #include "trekking.h"
 #include "trekkingpins.h"
 
-Trekking::Trekking():
-
+Trekking::Trekking(float linear_velocity, float angular_velocity):
+	//Velocities
+	MAX_LINEAR_VELOCITY(linear_velocity),
+	MAX_ANGULAR_VELOCITY(angular_velocity),
+	
 	//Motors
 	MAX_MOTOR_PWM(255),
+	MAX_RPS(3000),
 	robot(R_ENABLE_PIN,R_MOTOR_1_PIN,R_MOTOR_2_PIN,L_ENABLE_PIN,L_MOTOR_1_PIN,L_MOTOR_2_PIN),
 
 	COMMAND_BAUD_RATE(9600),
@@ -23,7 +27,7 @@ Trekking::Trekking():
 	sonar_list(Sonar::CHAIN),
 
 	targets(),
-	planned_trajectory(),
+	init_position(),
 	encoder_stream(&Serial2),
 	locator(encoder_stream, Position(0,0,0)),
 
@@ -107,8 +111,8 @@ void Trekking::reset() {
 	log.assert("reset", "resetting...");
 
 	//Trekking variables
-	linear_velocity = 0;
-	angular_velocidy = 0;
+	desired_linear_velocity = 0;
+	desired_angular_velocity = 0;
 	min_distance_to_enable_lights = 0;
 	min_distance_to_refine_search = 0;
 	current_command = ' ';
@@ -191,56 +195,85 @@ void Trekking::standby() {
 }
 
 void Trekking::trackTrajectory() {
+	bool linear = true;
+	if(linear){
+		desired_linear_velocity = MAX_LINEAR_VELOCITY;
+		desired_angular_velocity = 0;
+	}else{
+		desired_linear_velocity = 0;
+		desired_angular_velocity = MAX_ANGULAR_VELOCITY;
+	}
+
+	//constants to handle errors
+	const int k1 = 2;
+	const int k2 = 1;
+	const int k3 = 2;
+
 	Position* trekking_position = locator.getLastPosition();
+	unsigned long t = tracking_regulation_timer.getElapsedTime();
+	Position gap = trekking_position->calculateGap(plannedPosition(linear, t));
+
+	//Angular transformation
+	float e1 = gap.getX()*cos(trekking_position->getTheta()) + gap.getY()*sin(trekking_position->getTheta());
+	float e2 = -gap.getX()*sin(trekking_position->getTheta()) + gap.getY()*cos(trekking_position->getTheta());
+	float e3 = gap.getTheta();
+
+	//Calculating linear velocity and angular velocity
+	float v = desired_linear_velocity*cos(e3) + k1*e1;
+	float w = desired_angular_velocity + k2*e2 + k3*e3;
+
+	controlMotors(v, w);
+
+
 	distance_to_target = trekking_position->distanceFrom(targets.get(current_target_index));
-	tracking_regulation_timer.getElapsedTime();
 }
 
-void Trekking::planTrajectory(bool is_trajectory_linear, float velocity, Position* destination){
-	planned_trajectory.clear();
+void Trekking::controlMotors(float v, float w){
+	//Calculating rps
+	float right_wheels_vel = (2*v + w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
+	float left_wheels_vel = (2*v - w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
+
+	//calculating rpm
+	byte right_pwm = right_wheels_vel*MAX_MOTOR_PWM/MAX_RPS;
+	bool right_reverse = (right_wheels_vel < 0);
+	byte left_pwm = left_wheels_vel*MAX_MOTOR_PWM/MAX_RPS;
+	bool left_reverse = (left_wheels_vel < 0);
+
+	// Setting PWM
+	robot.setRPWM(right_pwm, right_reverse);
+	robot.setLPWM(left_pwm, left_reverse);
+}
+
+Position Trekking::plannedPosition(bool is_trajectory_linear, unsigned long tempo){
+
+	Position* destination = targets.get(current_target_index);
 	Position* trekking_position = locator.getLastPosition();
+	Position planned_position = Position();
+	float t = (float) tempo;
+	t /= 1000; //Mills to sec
 	if(is_trajectory_linear){
-		float path = trekking_position->distanceFrom(destination);
-		float time = path/velocity;
-		float delta_t = (float) READ_ENCODERS_TIME;
-		delta_t /= 1000; //Mills to sec
-		planned_trajectory.add(*trekking_position);
+		float velocity = desired_linear_velocity;
 		float dirx = 1;
-		if (trekking_position->getX() > destination->getY()){
+		if (init_position.getX() > destination->getY()){
 			dirx = -1;
 		}
 		float diry = 1;
-		if (trekking_position->getY() > destination->getY()){
+		if (init_position.getY() > destination->getY()){
 			diry = -1;
 		}
-		float theta = trekking_position->getTheta();
-		for(float t = delta_t; t<time; t += delta_t){
-			float path_t = 	velocity*t;
-			Position position_t = Position(
-					trekking_position->getX() + path_t*cos(theta)*dirx, //x
-					trekking_position->getY() + path_t*sin(theta)*diry, //y
-					theta);
-			planned_trajectory.add(position_t);
-		}
+		float path_t = 	velocity*t;
+		planned_position.set(init_position.getX() + path_t*cos(init_position.getTheta())*dirx, //x
+							init_position.getY() + path_t*sin(init_position.getTheta())*diry, //y
+							init_position.getTheta());
 	}
 	else{
-		//TODO:
-		float path = destination->getTheta() - trekking_position->getTheta();
-		float time = path/velocity;
-		float delta_t = (float) READ_ENCODERS_TIME;
-		delta_t /= 1000;
-		float x = trekking_position->getX();
-		float y = trekking_position->getY();
-		planned_trajectory.add(*trekking_position);
-		for(float t = delta_t; t<time; t+= delta_t){
-			Position position_t = Position(x,y,
-					trekking_position->getTheta() +  velocity*t);
-			planned_trajectory.add(position_t);
-		}
+		float velocity = desired_angular_velocity;
+		planned_position.set(init_position.getX(),
+							 init_position.getY(),
+							 trekking_position->getTheta() +  velocity*t);
 	}
 }
 
-//TODO: funcao de busca
 void Trekking::search() {
 	if(!is_tracking) {
 		tracking_regulation_timer.start();
@@ -253,8 +286,6 @@ void Trekking::search() {
 		operation_mode = &Trekking::refinedSearch;
 	}
 }
-
-
 
 void Trekking::refinedSearch() {
 

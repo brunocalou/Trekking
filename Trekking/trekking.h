@@ -19,12 +19,14 @@
 
 class Trekking {
 private:
+	const float MAX_LINEAR_VELOCITY;  // [m/s]
+	const float MAX_ANGULAR_VELOCITY; // [ang/s]
 
-	float linear_velocity;
-	float angular_velocidy;
+	float desired_linear_velocity;
+	float desired_angular_velocity;
 
 	LinkedList<Position *> targets;
-	LinkedList<Position> planned_trajectory;
+	Position init_position;
 	int current_target_index;
 
 	const int COMMAND_BAUD_RATE;
@@ -32,6 +34,7 @@ private:
 	const int ENCODER_BAUD_RATE;
 
 	const byte MAX_MOTOR_PWM;
+	const float MAX_RPS;
 	const int LIGHT_DURATION;
 	const float PROXIMITY_RADIUS;
 	
@@ -96,8 +99,9 @@ private:
 	//Returns 1 if all the sensors are working
 	bool checkSensors();
 
-	//auxiliar
-	void planTrajectory(bool is_trajectory_linear, float velocity, Position* destination);
+	//auxiliar functions for control
+	Position plannedPosition(bool is_trajectory_linear, unsigned long t);
+	void controlMotors(float v, float w);
 	void trackTrajectory();
 
 	/*----Operation modes----*/
@@ -112,7 +116,7 @@ private:
 	void debug();
 
 public:
-	Trekking();
+	Trekking(float max_linear_velocity, float max_angular_velocity);
 	~Trekking();
 
 	void addTarget(Position *target);

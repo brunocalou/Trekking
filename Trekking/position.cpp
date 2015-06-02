@@ -48,3 +48,10 @@ void Position::setTheta(float theta){
 float Position::distanceFrom(Position *position) {
 	return sqrt( sq((x - position->getX())) + sq(y - position->getY()) );
 }
+
+Position Position::calculateGap(Position pos){
+	float gap_x = pos.getX() - x;
+	float gap_y = pos.getY() - y;
+	float gap_theta = pos.getTheta() - theta;
+	return Position(gap_x, gap_y, gap_theta);
+}
