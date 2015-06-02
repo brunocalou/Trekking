@@ -1,5 +1,18 @@
 #include "locator.h"
 
+#define MPU_UPDATE_RATE  (20)
+
+//  MAG_UPDATE_RATE defines the rate (in Hz) at which the MPU updates the magnetometer data
+//  MAG_UPDATE_RATE should be less than or equal to the MPU_UPDATE_RATE
+
+#define MAG_UPDATE_RATE  (10)
+
+//  MPU_LPF_RATE is the low pas filter rate and can be between 5 and 188Hz
+
+#define MPU_LPF_RATE   40
+
+#define  MPU_MAG_MIX_GYRO_AND_MAG       10
+
 Locator::Locator(Stream *encoder_stream, Position initial_position):encoder_list(encoder_stream) {
 		encoder_list.addEncoder(&front_left_encoder);
 		encoder_list.addEncoder(&back_left_encoder);
@@ -12,13 +25,22 @@ Locator::Locator(Stream *encoder_stream, Position initial_position):encoder_list
 		last_robot_angular_speed = 0;
 		last_position = initial_position;
 		last_update_time = 0;
+
+		// Wire.begin();
+		
 }
 
 
 Locator::~Locator() {}
 
+void Locator::initMPU() {
+	// Wire.begin();
+	MPU.init(MPU_UPDATE_RATE, MPU_MAG_MIX_GYRO_AND_MAG, MAG_UPDATE_RATE, MPU_LPF_RATE);
+}
+
 void Locator::start() {
 	encoder_list.start();
+	
 }
 
 //getters
@@ -53,7 +75,23 @@ float Locator::getRobotLinearSpeed() const {
 	return robot_linear_speed;
 }
 
+void Locator::readMPU() {
+	// Serial.println("Reading mpu");
+	if(MPU.read()) {
+		euler_degrees[0] = MPU.m_dmpEulerPose[0] * 180/PI;
+		euler_degrees[1] = MPU.m_dmpEulerPose[1] * 180/PI;
+		euler_degrees[2] = MPU.m_dmpEulerPose[2] * 180/PI + 180;//avoid negative angles
+	}
+	//MPU.printAngles(MPU.m_dmpEulerPose);
+	// Serial.print(euler_degrees[0]);
+	// Serial.print("\t");
+	// Serial.print(euler_degrees[1]);
+	// Serial.print("\t");
+	// Serial.print(euler_degrees[2]);
+	// Serial.print("\t");
+	// Serial.println();
 
+}
 
 void Locator::update() {
 	//Get the current values
@@ -61,7 +99,7 @@ void Locator::update() {
 	unsigned long now = millis();
 	float delta_t = now - last_update_time;
 	int delta_pulses[4];
-	double rps[4];
+	float rps[4];
 
 	// Serial.print(delta_t);
 	// Serial.print(" ");
@@ -69,18 +107,18 @@ void Locator::update() {
 	for (int i=0; i<4; i++){
 		delta_pulses[i] = encoder_list.get(i)->getDeltaPulses();
 		//Calculate rps
-		rps[i] = 1000 * delta_pulses[i]/((float)delta_t * PULSES_PER_ROTATION);
-		Serial.print(rps[i]);
-		Serial.print('\t');
-		Serial.print(delta_pulses[i]);
-		Serial.print('\t');
+		rps[i] = delta_pulses[i]/((delta_t  * PULSES_PER_ROTATION) / 1000.0);
+		// Serial.print(rps[i]);
+		// Serial.print('\t');
+		// Serial.print(delta_pulses[i]);
+		// Serial.print('\t');
 
 		// Serial.print(" ");
 	}
-	Serial.print(delta_t);
-	Serial.print('\t');
-	Serial.print(PULSES_PER_ROTATION);
-	Serial.println();
+	// Serial.print(delta_t);
+	// Serial.print('\t');
+	// Serial.print(PULSES_PER_ROTATION);
+	// Serial.println();
 	
 	//Calculate speed
 	calculateSpeeds(rps);

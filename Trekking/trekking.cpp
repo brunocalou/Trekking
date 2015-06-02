@@ -19,6 +19,7 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	PROXIMITY_RADIUS(3.0),
 
 	READ_ENCODERS_TIME(30),
+	READ_MPU_TIME(30),
 	
 	right_sonar(RIGHT_SONAR_TX_PIN, RIGHT_SONAR_RX_PIN),
 	left_sonar(LEFT_SONAR_TX_PIN, LEFT_SONAR_RX_PIN),
@@ -34,7 +35,8 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	//Timers
 	encoders_timer(&locator, &Locator::update),
 	sirene_timer(this, &Trekking::goToNextTarget),
-	tracking_regulation_timer(this, &Trekking::trackTrajectory)
+	tracking_regulation_timer(this, &Trekking::trackTrajectory),
+	mpu_timer(&locator, &Locator::readMPU)
 {
 	//Streams
 	command_stream = &Serial; //bluetooth on Serial1
@@ -50,9 +52,13 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	sonar_list.addSonar(&right_sonar);
 
 	//Timers
+	mpu_timer.setInterval(READ_MPU_TIME);
+	mpu_timer.start(); //Must read the mpu all the time
+
 	encoders_timer.setInterval(READ_ENCODERS_TIME);
 	sirene_timer.setTimeout(LIGHT_DURATION);
 	tracking_regulation_timer.setTimeout(READ_ENCODERS_TIME);
+
 	reset();
 }
 
@@ -330,12 +336,16 @@ void Trekking::resetTimers() {
 }
 
 void Trekking::updateTimers() {
+	mpu_timer.update();
 	encoders_timer.update();
 	sirene_timer.update();
 	tracking_regulation_timer.update();
 }
 
 void Trekking::start() {
+	//Turn off the alert led
+	digitalWrite(ALERT_LED, LOW);
+	locator.initMPU();
 	Serial.begin(COMMAND_BAUD_RATE);
 	Serial1.begin(COMMAND_BAUD_RATE);
 	Serial2.begin(ENCODER_BAUD_RATE);
@@ -377,12 +387,19 @@ void Trekking::debug() {
 			Serial.print("\t");
 		}
 		Serial.println();
-	} if(1){//current_command == 'L') {
+	} else if(current_command == 'L') {
 		// log.debug("debug command", "print locator");
-		// log << DEBUG << "" << log_endl;
+		log << DEBUG << "" << log_endl;
 		
-		// log << locator.getRobotAngularSpeed() << '\t';
-		// log << locator.getRobotLinearSpeed() << '\t';
-		// log << locator.getLastUpdateTime() << '\t';
+		log << locator.getRobotAngularSpeed() << '\t';
+		log << locator.getRobotLinearSpeed() << '\t';
+		log << locator.getLastUpdateTime() << '\t';
+	} if(current_command == 'm') {
+		// log.debug("debug command", "print mpu");
+		log << DEBUG << "" << log_endl;
+		
+		log << locator.euler_degrees[0] << '\t';
+		log << locator.euler_degrees[1] << '\t';
+		log << locator.euler_degrees[2] << '\t';
 	}
 }

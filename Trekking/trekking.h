@@ -39,6 +39,7 @@ private:
 	const float PROXIMITY_RADIUS;
 	
 	const int READ_ENCODERS_TIME;
+	const int READ_MPU_TIME;
 
 	/*
 		Input states
@@ -82,6 +83,7 @@ private:
 
 	//Timers
 	TimerForMethods<Locator> encoders_timer;
+	TimerForMethods<Locator> mpu_timer;
 	TimerForMethods<Trekking> sirene_timer;
 	TimerForMethods<Trekking> tracking_regulation_timer;
 

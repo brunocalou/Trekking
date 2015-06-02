@@ -9,6 +9,16 @@
 #include "../Encoder/simpleencoder.h"
 #include "position.h"
 
+#include <Wire.h>
+#include "../I2CDev/I2Cdev.h"
+#include "../MPU9150Lib/MPU9150Lib.h"
+#include "../CalLib/CalLib.h"
+#include <dmpKey.h>
+#include <dmpmap.h>
+#include <inv_mpu.h>
+#include <inv_mpu_dmp_motion_driver.h>
+#include <EEPROM.h>
+
 const float WHEEL_RADIUS = 0.075;
 const float PULSES_PER_ROTATION = 64.0;
 const float DISTANCE_FROM_RX = 0.138;
@@ -35,10 +45,14 @@ public:
 	float getRobotLinearSpeed() const;
 
 	void start();
+	void initMPU();
 	void update();
 	Position* getLastPosition();
 	void reset(Position new_position);
 	EncoderList encoder_list;
+
+	void readMPU();
+	float euler_degrees[3];
 
 public:
 	SimpleEncoder front_left_encoder;
@@ -56,6 +70,8 @@ public:
 	float last_robot_linear_speed;
 	float last_robot_angular_speed;
 	Position last_position;
+
+	MPU9150Lib MPU;
 
 	
 	void calculateSpeeds(float pps[]);

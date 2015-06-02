@@ -32,4 +32,10 @@ const byte CENTER_SONAR_TX_PIN = 0;
 /*
 	Sirene
 */
-const byte SIRENE_PIN = 13;
+const byte SIRENE_PIN = 12;
+
+/*
+	Alert led
+*/
+
+const byte ALERT_LED = 13;

@@ -1,2 +1,1 @@
-arduino --board arduino:avr:mega:cpu=atmega1280 --upload ./Trekking/Trekking.ino
-ino serial
+arduino --board arduino:avr:mega:cpu=atmega2560 --upload ./Trekking/Trekking.ino && ino serial
