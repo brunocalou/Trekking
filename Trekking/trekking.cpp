@@ -349,13 +349,14 @@ void Trekking::start() {
 	locator.initMPU();
 	Serial.begin(COMMAND_BAUD_RATE);
 	Serial1.begin(COMMAND_BAUD_RATE);
-	Serial2.begin(ENCODER_BAUD_RATE);
+	// Serial2.begin(ENCODER_BAUD_RATE);
 }
 
 void Trekking::debug() {
 	if(current_command == 's') {
 		log.debug("debug command", "set to standby");
 		operation_mode = &Trekking::standby;
+		stopTimers();
 	} else if(current_command == 'e') {
 		log.debug("debug command", "set to search");
 		// operation_mode = &Trekking::search;

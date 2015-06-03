@@ -71,6 +71,7 @@ public:
 	float last_robot_angular_speed;
 	Position last_position;
 
+	float rps[4];
 	MPU9150Lib MPU;
 
 	

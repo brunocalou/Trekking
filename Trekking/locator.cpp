@@ -26,6 +26,12 @@ Locator::Locator(Stream *encoder_stream, Position initial_position):encoder_list
 		last_position = initial_position;
 		last_update_time = 0;
 
+		rps[0] = 0;
+		rps[1] = 0;
+		rps[2] = 0;
+		rps[3] = 0;
+
+
 		// Wire.begin();
 		
 }
@@ -99,26 +105,39 @@ void Locator::update() {
 	unsigned long now = millis();
 	float delta_t = now - last_update_time;
 	int delta_pulses[4];
-	float rps[4];
 
 	// Serial.print(delta_t);
 	// Serial.print(" ");
 
-	for (int i=0; i<4; i++){
+	for (int i=0; i < 4; i++){
 		delta_pulses[i] = encoder_list.get(i)->getDeltaPulses();
 		//Calculate rps
-		rps[i] = delta_pulses[i]/((delta_t  * PULSES_PER_ROTATION) / 1000.0);
+		rps[i] = delta_pulses[i];
 		// Serial.print(rps[i]);
 		// Serial.print('\t');
-		// Serial.print(delta_pulses[i]);
+		rps[i] /= delta_t;
+		// Serial.print(rps[i]);
 		// Serial.print('\t');
+		rps[i] /= PULSES_PER_ROTATION;
+		// Serial.print(rps[i]);
+		// Serial.print('\t');
+		rps[i] *= 1000;
+		Serial.print(rps[i]);
+		Serial.print('\t');
+		Serial.print(delta_pulses[i]);
+		Serial.print('\t');
+
 
 		// Serial.print(" ");
 	}
-	// Serial.print(delta_t);
-	// Serial.print('\t');
-	// Serial.print(PULSES_PER_ROTATION);
-	// Serial.println();
+	Serial.print(delta_t);
+	Serial.print('\t');
+	Serial.print(PULSES_PER_ROTATION);
+	Serial.print('\t');
+	Serial.print(1000 / (delta_t * PULSES_PER_ROTATION));
+	Serial.print('\t');
+	Serial.print(1000 * delta_pulses[0]/ (delta_t * PULSES_PER_ROTATION));	
+	Serial.println();
 	
 	//Calculate speed
 	calculateSpeeds(rps);
@@ -138,7 +157,7 @@ void Locator::reset(Position new_position) {
 	last_robot_linear_speed = 0;
 	last_robot_angular_speed = 0;
 	last_position = new_position;
-	last_update_time = 0;	
+	last_update_time = 0;
 }
 
 
