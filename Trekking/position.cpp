@@ -27,9 +27,9 @@ float Position::getTheta(){
 
 //setters
 void Position::set(float x, float y, float theta){
-	this->x = x;
-	this->y = y;
-	this->theta = theta;	
+	setX(x);
+	setY(y);
+	setTheta(theta);
 }
 
 
@@ -42,6 +42,12 @@ void Position::setY(float y){
 }
 
 void Position::setTheta(float theta){
+	if(theta >= 360) {
+		theta -= 360;
+	}
+	if(theta <= 0) {
+		theta += 359.999;
+	}
 	this->theta = theta;
 }
 
