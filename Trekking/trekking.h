@@ -8,6 +8,7 @@
 #include "trekkingmath.h"
 #include "position.h"
 #include "locator.h"
+#include "PIDControler.h"
 
 // enum OperationMode {
 
@@ -86,6 +87,12 @@ private:
 	TimerForMethods<Locator> mpu_timer;
 	TimerForMethods<Trekking> sirene_timer;
 	TimerForMethods<Trekking> tracking_regulation_timer;
+
+	float kp, ki, kd, bsp;
+	PIDControler pid;
+	float left_vel_ref, right_vel_ref;
+	float pid_convertion_const;
+
 
 	void reset();
 	void stop();

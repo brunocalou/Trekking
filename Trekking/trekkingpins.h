@@ -1,9 +1,9 @@
 /*
 	Buttons and switches
 */
-const byte INIT_BUTTON_PIN = 15;
-const byte EMERGENCY_BUTTON_PIN  = 14;
-const byte OPERATION_MODE_SWITCH_PIN = 2;
+const byte INIT_BUTTON_PIN = A4;
+const byte EMERGENCY_BUTTON_PIN  = A5;
+const byte OPERATION_MODE_SWITCH_PIN = A3;
 
 const bool MANUAL_MODE = 0;
 const bool AUTO_MODE = 1;
@@ -22,7 +22,7 @@ const byte L_MOTOR_2_PIN = 0;
 /*
 	Sonars
 */
-const byte LEFT_SONAR_RX_PIN = 3;
+const byte LEFT_SONAR_RX_PIN = 9;
 const byte LEFT_SONAR_TX_PIN = A0;
 const byte CENTER_SONAR_RX_PIN = 0;
 const byte CENTER_SONAR_TX_PIN = A1;
@@ -39,4 +39,4 @@ const byte SIRENE_PIN = 12;
 	Alert led
 */
 
-const byte ALERT_LED = 13;
+const byte ALERT_LED = A6;

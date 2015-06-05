@@ -5,6 +5,7 @@
 #include "timer.h"
 #include "position.h"
 #include "trekkingpins.h"
+#include "PIDControler.h"
 // #include "XLMaxSonarEZ.h"
 #include "log.h"
 
@@ -35,7 +36,7 @@ Position *cone_2 = new Position(0,0,0);
 Position *cone_3 = new Position(0,0,0);
 
 void setup() {
-	pinMode(ALERT_LED, OUTPUT);
+	// pinMode(ALERT_LED, OUTPUT);
 	pinMode(SIRENE_PIN, OUTPUT);
 	digitalWrite(ALERT_LED, HIGH); //states that there is a problem.
 	//If the arduino could start the

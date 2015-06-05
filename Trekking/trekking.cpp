@@ -59,6 +59,12 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	sirene_timer.setTimeout(LIGHT_DURATION);
 	tracking_regulation_timer.setTimeout(READ_ENCODERS_TIME);
 
+	kp = 7.2;
+	ki = 0;
+	kd = 8;
+	bsp = 0.8;
+	pid_convertion_const = (1000 * 2 * 3.1415) / 1024.0;
+
 	reset();
 }
 
@@ -101,6 +107,7 @@ void Trekking::update() {
 	//the stop command was received
 	if(current_command == 'D' || emergency_button) {
 		stop();
+		stopTimers();
 		operation_mode = &Trekking::standby;
 		log.assert("operation mode", "standby");
 		current_command = ' ';
@@ -126,6 +133,8 @@ void Trekking::reset() {
 	is_tracking = false;
 	current_target_index = 0;
 	distance_to_target = locator.getLastPosition()->distanceFrom(targets.get(current_target_index));
+	left_vel_ref = 0;
+	right_vel_ref = 0;
 	
 	//Go to the standby state
 	operation_mode = &Trekking::standby;
@@ -156,12 +165,12 @@ void Trekking::stop() {
 
 //TODO: acho que nao vai rolar fazer essa...
 void Trekking::readInputs() {
-	init_button = true;
-	emergency_button = false;
-	operation_mode_switch = MANUAL_MODE;
-	// init_button = digitalRead(INIT_BUTTON_PIN);
-	// emergency_button = digitalRead(EMERGENCY_BUTTON_PIN);
-	// operation_mode_switch = digitalRead(OPERATION_MODE_SWITCH_PIN);
+	// init_button = true;
+	// emergency_button = false;
+	// operation_mode_switch = MANUAL_MODE;
+	init_button = digitalRead(INIT_BUTTON_PIN);
+	emergency_button = digitalRead(EMERGENCY_BUTTON_PIN);
+	operation_mode_switch = digitalRead(OPERATION_MODE_SWITCH_PIN);
 }
 
 void Trekking::turnOnSirene() {
@@ -181,9 +190,9 @@ bool Trekking::checkSensors() {
 
 void Trekking::standby() {
 	if(operation_mode_switch == AUTO_MODE) {
-		log.debug("mode switch", "auto");
+		// log.debug("mode switch", "auto");
 		if(init_button) {
-			log.debug("init button", init_button);
+			// log.debug("init button", init_button);
 			reset();
 			if(checkSensors()) {
 				operation_mode = &Trekking::search;
@@ -244,6 +253,8 @@ void Trekking::controlMotors(float v, float w){
 	bool right_reverse = (right_wheels_vel < 0);
 	byte left_pwm = left_wheels_vel*MAX_MOTOR_PWM/MAX_RPS;
 	bool left_reverse = (left_wheels_vel < 0);
+
+	//PID
 
 	// Setting PWM
 	robot.setRPWM(right_pwm, right_reverse);
