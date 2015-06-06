@@ -88,6 +88,11 @@ void Locator::readMPU() {
 		euler_degrees[1] = MPU.m_dmpEulerPose[1] * 180/PI;
 		euler_degrees[2] = MPU.m_dmpEulerPose[2] * 180/PI + 180;//avoid negative angles
 	}
+
+	if(mpu_first_time) {
+		initial_euler_degrees = euler_degrees[2];
+		mpu_first_time = false;
+	}
 	//MPU.printAngles(MPU.m_dmpEulerPose);
 	// Serial.print(euler_degrees[0]);
 	// Serial.print("\t");
@@ -150,6 +155,7 @@ void Locator::update() {
 
 void Locator::reset(Position new_position) {
 	encoder_list.reset();
+	mpu_first_time = true;
 
 	robot_linear_speed = 0;
 	robot_angular_speed = 0;
@@ -167,8 +173,8 @@ Position* Locator::getLastPosition(){
 
 
 void Locator::calculateSpeeds(float rps[]){
-	float left_speed = (rps[0] + rps[1])*WHEEL_RADIUS/2; // em [m/s]
-	float right_speed = (rps[2] + rps[3])*WHEEL_RADIUS/2;// em [m/s]
+	left_speed = (rps[0] + rps[1])*WHEEL_RADIUS/2; // em [m/s]
+	right_speed = (rps[2] + rps[3])*WHEEL_RADIUS/2;// em [m/s]
 	
 	robot_linear_speed = (right_speed + left_speed)/2;
 	robot_angular_speed = (right_speed - left_speed)/DISTANCE_FROM_RX;
@@ -177,7 +183,8 @@ void Locator::calculateSpeeds(float rps[]){
 
 void Locator::calcutePosition(float dT){
 	float med_angular_speed = (robot_angular_speed + last_robot_angular_speed)/2;
-	float theta = last_position.getTheta() + med_angular_speed*dT;
+	// float theta = last_position.getTheta() + med_angular_speed*dT;
+	float theta = euler_degrees[3] - initial_euler_degrees;
 
 	float med_linear_speed = (robot_linear_speed + last_robot_linear_speed)/2;
 	float x = last_position.getX() + med_linear_speed*cos(theta)*dT;//angulo em radiano

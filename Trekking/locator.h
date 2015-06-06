@@ -53,6 +53,7 @@ public:
 
 	void readMPU();
 	float euler_degrees[3];
+	float initial_euler_degrees;
 
 public:
 	SimpleEncoder front_left_encoder;
@@ -69,10 +70,14 @@ public:
 
 	float last_robot_linear_speed;
 	float last_robot_angular_speed;
+
+	float left_speed, right_speed;
 	Position last_position;
 
 	float rps[4];
 	MPU9150Lib MPU;
+	bool mpu_first_time;
+
 
 	
 	void calculateSpeeds(float pps[]);

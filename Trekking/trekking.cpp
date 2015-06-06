@@ -7,7 +7,7 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	MAX_ANGULAR_VELOCITY(angular_velocity),
 	
 	//Motors
-	MAX_MOTOR_PWM(255),
+	MAX_MOTOR_PWM(120),
 	MAX_RPS(3000),
 	robot(R_ENABLE_PIN,R_MOTOR_1_PIN,R_MOTOR_2_PIN,L_ENABLE_PIN,L_MOTOR_1_PIN,L_MOTOR_2_PIN),
 
@@ -39,8 +39,8 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	mpu_timer(&locator, &Locator::readMPU)
 {
 	//Streams
-	command_stream = &Serial; //bluetooth on Serial1
-	log_stream = &Serial;
+	command_stream = &Serial1; //bluetooth on Serial1
+	log_stream = &Serial1;
 	
 	log.setTarget(log_stream);
 
@@ -64,6 +64,9 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 	kd = 8;
 	bsp = 0.8;
 	pid_convertion_const = (1000 * 2 * 3.1415) / 1024.0;
+
+	right_pid.Init(kp, kd, ki, bsp);
+	left_pid.Init(kp, kd, ki, bsp);
 
 	reset();
 }
@@ -245,17 +248,36 @@ void Trekking::trackTrajectory() {
 
 void Trekking::controlMotors(float v, float w){
 	//Calculating rps
-	float right_wheels_vel = (2*v + w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
-	float left_wheels_vel = (2*v - w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
+	float right_desired_vel = (2*v + w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
+	float left_desired_vel = (2*v - w*DISTANCE_FROM_RX)/(2*WHEEL_RADIUS);//[RPS]
 
-	//calculating rpm
-	byte right_pwm = right_wheels_vel*MAX_MOTOR_PWM/MAX_RPS;
-	bool right_reverse = (right_wheels_vel < 0);
-	byte left_pwm = left_wheels_vel*MAX_MOTOR_PWM/MAX_RPS;
-	bool left_reverse = (left_wheels_vel < 0);
+	log << DEBUG << "" << log_endl;
+	log << "right desired = " << right_desired_vel;
+	log << "\tleft desired = " << left_desired_vel;
+
+	log << "right speed = " << locator.right_speed;
+	log << "\tleft speed = " << locator.left_speed;
 
 	//PID
+	float right_pid_out = floor(right_pid.run(abs(right_desired_vel),locator.right_speed));
+	float left_pid_out = floor(left_pid.run(abs(left_desired_vel),locator.left_speed));
 
+	log << "right pid out = " << right_pid_out;
+	log << "\tleft pid out = " << left_pid_out;
+
+	//calculating pwm
+	byte right_pwm = right_pid_out*MAX_MOTOR_PWM/MAX_RPS;
+	bool right_reverse = (right_pid_out < 0);
+	byte left_pwm = left_pid_out*MAX_MOTOR_PWM/MAX_RPS;
+	bool left_reverse = (left_pid_out < 0);
+
+	// right_pwm = pidOut;
+	right_pwm = right_pwm > 255 ? 255 : right_pwm;
+	left_pwm = left_pwm < 0   ? 0   : left_pwm;
+
+	log << "right pwm = " << right_pwm;
+	log << "\tleft pwm = " << left_pwm;
+	
 	// Setting PWM
 	robot.setRPWM(right_pwm, right_reverse);
 	robot.setLPWM(left_pwm, left_reverse);

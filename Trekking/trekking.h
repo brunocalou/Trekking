@@ -89,7 +89,8 @@ private:
 	TimerForMethods<Trekking> tracking_regulation_timer;
 
 	float kp, ki, kd, bsp;
-	PIDControler pid;
+	PIDControler right_pid;
+	PIDControler left_pid;
 	float left_vel_ref, right_vel_ref;
 	float pid_convertion_const;
 
