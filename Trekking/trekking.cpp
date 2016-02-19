@@ -57,7 +57,7 @@ Trekking::Trekking(float linear_velocity, float angular_velocity):
 
 	encoders_timer.setInterval(READ_ENCODERS_TIME);
 	sirene_timer.setTimeout(LIGHT_DURATION);
-	tracking_regulation_timer.setTimeout(READ_ENCODERS_TIME);
+	tracking_regulation_timer.setInterval(READ_ENCODERS_TIME);
 
 	kp = 7.2;
 	ki = 0;
