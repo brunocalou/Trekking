@@ -1,3 +1,4 @@
+[DEPRECATED] See https://github.com/MinervaBots/Hound instead
 # Trekking
 Minervabots team's Trekking robot for the 2015 Winter Challenge competition
 
