@@ -1,9 +1,9 @@
-[DEPRECATED] See https://github.com/MinervaBots/Hound instead
+**[DEPRECATED]** See https://github.com/MinervaBots/Hound instead
 # Trekking
 Minervabots team's Trekking robot for the 2015 Winter Challenge competition
 
 ------------------------
-##Installation
+## Installation
 `Prerequisites`
 * Log - https://github.com/brunocalou/Log
 * Generic Robot - https://github.com/brunocalou/Arduino-Generic-Robot
